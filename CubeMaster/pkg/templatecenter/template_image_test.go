@@ -115,6 +115,23 @@ func TestNormalizeTemplateImageRequestRejectsTooManyCustomExposedPorts(t *testin
 	}
 }
 
+func TestDefaultTemplateExposedPortsContainsOnly49983(t *testing.T) {
+	got := defaultTemplateExposedPorts()
+	want := map[int32]struct{}{49983: {}}
+	if !reflect.DeepEqual(got, want) {
+		t.Fatalf("defaultTemplateExposedPorts()=%v, want %v", got, want)
+	}
+}
+
+func TestCountCustomTemplateExposedPortsTreats49983AsReserved(t *testing.T) {
+	if count := countCustomTemplateExposedPorts([]int32{49983, 9000}); count != 1 {
+		t.Fatalf("countCustomTemplateExposedPorts([49983, 9000])=%d, want 1", count)
+	}
+	if count := countCustomTemplateExposedPorts([]int32{8080, 9000}); count != 2 {
+		t.Fatalf("countCustomTemplateExposedPorts([8080, 9000])=%d, want 2", count)
+	}
+}
+
 func TestNormalizeTemplateImageRequestTreatsOnlyCubeletDefaultsAsReserved(t *testing.T) {
 	withTemplateImageConfig(t, &config.Config{CubeletConf: &config.CubeletConf{
 		EnableExposedPort: true,
